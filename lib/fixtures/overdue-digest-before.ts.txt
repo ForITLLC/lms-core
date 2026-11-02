@@ -1,0 +1,60 @@
+// Exact caller declarations from app/api/cron/overdue-digest/route.ts at 69c1e5c3a81e927184dd8b4d8a627dd7f3a6f243
+// Source SHA256 ef244089bd59592f6a4659245f5edfa38dc351a7542efd2a1789aa8a478449cb; kept as a fixture so shallow CI does not need Git history.
+const REASON_LABEL: Record<OverdueReason, string> = {
+  expired_cert: "Certificate expired",
+  never_completed: "Not yet completed",
+  recurring_lapsed: "Recurring training due",
+};
+
+function formatDate(d: Date | null): string {
+  if (!d) return "—";
+  return d.toISOString().slice(0, 10);
+}
+
+function renderDigest(opts: {
+  group: LearnerOverdueGroup;
+  branding: ReturnType<typeof themeToBranding>;
+  logoDataUri: string | null;
+  brandName: string;
+  learnUrl: string;
+}): string {
+  const { group, branding, logoDataUri, brandName, learnUrl } = opts;
+  const rows = group.items.map((it) => ({
+    cells: [
+      { text: it.courseTitle, bold: true },
+      { text: REASON_LABEL[it.overdueReason] },
+      { text: formatDate(it.dueDate), align: "center" as const },
+    ],
+  }));
+
+  return foritModernEmail({
+    title: `You have ${group.items.length} overdue learning item${group.items.length === 1 ? "" : "s"}`,
+    subtitle: `Weekly digest · ${new Date().toISOString().slice(0, 10)}`,
+    preheader: `${group.items.length} overdue · open ${brandName} Learning to catch up`,
+    sections: [
+      {
+        emoji: "&#128218;",
+        title: "Overdue training",
+        content: foritModernTable(
+          [
+            { header: "Course" },
+            { header: "Status" },
+            { header: "Due", align: "center" },
+          ],
+          rows,
+        ),
+      },
+      {
+        emoji: "&#128279;",
+        title: "Catch up now",
+        content: foritModernCallout(
+          `<p style="margin:0 0 12px">Open your learning portal to get back on track:</p>
+           <p style="margin:0"><a href="${learnUrl}" style="color:${branding.primaryColor || FORIT_BRAND.navy};font-weight:600;text-decoration:underline">${learnUrl}</a></p>`,
+        ),
+      },
+    ],
+    footerText: `${brandName} Learning · weekly digest`,
+    footerSubtext: "Reply to this email if anything looks wrong.",
+    branding: { ...branding, ...(logoDataUri ? { logoDataUri } : {}) },
+  });
+}

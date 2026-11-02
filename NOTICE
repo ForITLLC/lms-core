@@ -1,0 +1,35 @@
+LMS — source distribution notices
+
+Application
+
+The LMS application source, bundled starter examples and embedded instruction
+templates are distributed under AGPL-3.0-only. The complete GNU Affero General
+Public License, version 3, is in LICENSE. This notice does not replace a
+component's separate applicable licence or assert exclusive ownership of its
+contributors' work.
+
+Vendored auth
+
+vendor/foritllc-auth contains auth 0.13.0 from ForITLLC/forit-Common, source commit
+8b89abd06736aceff4655a7ccc1b9441d1af45fc. Its SOURCE.json pins all 20 source modules
+and the supplied notice at d96a09d2358f15ebc453d16cf16ba1bc69e5f1e8. The only export
+rewrite in those modules changes an example address in a comment; executable
+source is unchanged.
+
+The component's existing MIT declaration and supplied notice are the licence
+basis carried here. Preserve vendor/foritllc-auth/LICENSE with copies of that
+component. Its copyright and permission notice is retained without alteration;
+the root AGPL licence does not replace it. These source and notice records are
+not a certification of every underlying contribution or assignment.
+
+Dependencies and content
+
+package-lock.json identifies dependencies that an installation downloads.
+Their applicable licences and notices remain with their code. A distribution
+that includes dependency binaries or source must carry the notices and other
+materials required for what it actually conveys.
+
+Names and logos remain subject to their owners' rights; the code licence does
+not grant trademark rights. Operator settings, learner records and courses
+provided separately by an operator or publisher are not part of this source
+snapshot and are not licensed by this notice.

@@ -1,0 +1,103 @@
+// Exact caller declarations from app/api/cron/daily-digest/route.ts at 69c1e5c3a81e927184dd8b4d8a627dd7f3a6f243
+// Source SHA256 17a12926579f3701a16c3455768e0a8adb21c24f6c4e678ffbceab099b8ee31d; kept as a fixture so shallow CI does not need Git history.
+const REQUIRED_REASON_LABEL: Record<OverdueReason, string> = {
+  expired_cert: "Certificate expired",
+  never_completed: "Not yet completed",
+  recurring_lapsed: "Recurring training due",
+};
+
+const UPCOMING_REASON_LABEL: Record<UpcomingReason, string> = {
+  cert_renewing: "Certificate renewing",
+  first_due: "First completion due",
+  recurring_due: "Recurring refresh due",
+};
+
+function formatDate(d: Date | null): string {
+  if (!d) return "—";
+  return d.toISOString().slice(0, 10);
+}
+
+function renderEmail(opts: {
+  payload: DigestPayload;
+  branding: ReturnType<typeof themeToBranding>;
+  logoDataUri: string | null;
+  brandName: string;
+  learnUrl: string;
+}): string {
+  const { payload, branding, logoDataUri, brandName, learnUrl } = opts;
+  const r = payload.required.length;
+  const u = payload.upcoming.length;
+
+  const sections: Parameters<typeof foritModernEmail>[0]["sections"] = [];
+
+  if (r > 0) {
+    sections.push({
+      emoji: "&#9888;&#65039;", // ⚠️
+      title: `Required — action now (${r})`,
+      content: foritModernTable(
+        [
+          { header: "Course" },
+          { header: "Why" },
+          { header: "Due", align: "center" },
+        ],
+        payload.required.map((it) => ({
+          cells: [
+            { text: it.courseTitle, bold: true },
+            { text: REQUIRED_REASON_LABEL[it.overdueReason] },
+            { text: formatDate(it.dueDate), align: "center" as const },
+          ],
+        })),
+      ),
+    });
+  }
+
+  if (u > 0) {
+    sections.push({
+      emoji: "&#128197;", // 📅
+      title: `Upcoming — within 60 days (${u})`,
+      content: foritModernTable(
+        [
+          { header: "Course" },
+          { header: "Why" },
+          { header: "Due", align: "center" },
+        ],
+        payload.upcoming.map((it) => ({
+          cells: [
+            { text: it.courseTitle, bold: true },
+            { text: UPCOMING_REASON_LABEL[it.upcomingReason] },
+            { text: formatDate(it.dueDate), align: "center" as const },
+          ],
+        })),
+      ),
+    });
+  }
+
+  sections.push({
+    emoji: "&#128279;", // 🔗
+    title: "Open your learning portal",
+    content: foritModernCallout(
+      `<p style="margin:0 0 12px">Sign in to ${brandName} Learning to take care of your training:</p>
+       <p style="margin:0"><a href="${learnUrl}" style="color:${branding.primaryColor || FORIT_BRAND.navy};font-weight:600;text-decoration:underline">${learnUrl}</a></p>`,
+    ),
+  });
+
+  const preheaderParts: string[] = [];
+  if (r > 0) preheaderParts.push(`${r} required`);
+  if (u > 0) preheaderParts.push(`${u} upcoming`);
+  const preheader = `${preheaderParts.join(" · ")} · open ${brandName} Learning`;
+
+  const title =
+    r > 0
+      ? `You have ${r} required learning item${r === 1 ? "" : "s"}`
+      : `You have ${u} learning item${u === 1 ? "" : "s"} coming up`;
+
+  return foritModernEmail({
+    title,
+    subtitle: `Daily digest · ${new Date().toISOString().slice(0, 10)}`,
+    preheader,
+    sections,
+    footerText: `${brandName} Learning · daily digest`,
+    footerSubtext: "Reply to this email if anything looks wrong.",
+    branding: { ...branding, ...(logoDataUri ? { logoDataUri } : {}) },
+  });
+}

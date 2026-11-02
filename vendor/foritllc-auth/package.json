@@ -1,0 +1,52 @@
+{
+  "name": "@foritllc/auth",
+  "version": "0.13.0",
+  "description": "MSAL-based authentication for ForIT apps. Two high-level mode factories: createForitAuth (single-tenant, safe ForIT defaults) and createMultiTenantAuth (foreign-tenant logins, allowedTenantIds REQUIRED). 0.8.0: the id_token is validated (signature, iss, aud, exp, nonce) before tid is trusted; state + PKCE are bound to the browser by a signed transaction cookie; returnTo is same-origin only; staff = the ForIT tenant (staffPaths / isForitStaffSession), never an email domain. 0.9.0: clientAssertion redeems the code with no secret; managedIdentityClientAssertion() uses the app's managed identity through a federated credential on the shared sign-in registration. 0.10.0: defaultDeny, so every path needs a session unless it is a static asset or on publicPaths (the default from 1.0.0); static prefixes match on a path boundary; routeAccess() for route-walk tests. 0.11.0: a browser sign-out also ends the Microsoft session (Entra end-session, post_logout_redirect_uri https://<host>/, logout_hint from the id_token login_hint claim when emitted); endEntraSession: false opts out. 0.12.0: a missing, blank or unresolved Key Vault / App Configuration reference SESSION_SECRET is refused (the handler factories throw at startup, signing throws, verifying returns null), so an unresolved @Microsoft.KeyVault(...) value is never a signing key. 0.13.0: optional Google sign-in through forit-Auth's app sign-in exchange, opt-in and off by default, from the ./google subpath (createGoogleSignIn): the app holds no Google credential, its __Host-<appId>-session cookie holds only Auth's opaque handle, every request verifies with Auth and keeps nothing (fails closed), a GooglePrincipal has no tid or azureOid, and linked-principal group access is denied unless a Directory status reader (R-D2) is configured; the Entra routes, cookie and helpers are byte-for-byte unchanged. Raw createAuthMiddleware / createCallbackHandler / etc. exports kept for back-compat. Next.js entry plus a browser sub-export for Vite/SPA consumers using msal-browser.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "LICENSE",
+    "README.md",
+    "SOURCE.json",
+    "tsconfig.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ForITLLC/forit-Common.git",
+    "directory": "packages/auth"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "default": "./dist/browser.js"
+    },
+    "./google": {
+      "types": "./dist/google.d.ts",
+      "default": "./dist/google.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json"
+  },
+  "peerDependencies": {
+    "next": ">=14.0.0",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "author": "ForIT LLC",
+  "license": "MIT",
+  "private": true
+}

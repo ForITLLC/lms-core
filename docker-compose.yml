@@ -1,0 +1,93 @@
+# Self-hosted LMS: SQL Server 2022, a one-shot setup (database, migrations, the
+# app's SQL login, the first tenant) and the app. See docs/self-host.md.
+#
+#   cp .env.example .env                                  # the app's settings
+#   cp docker/selfhost.env.example selfhost.env           # this file's settings
+#   docker compose --env-file selfhost.env up -d --build
+name: lms
+
+services:
+  certs:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    user: root
+    entrypoint: ["/bin/sh", "/docker/make-certs.sh"]
+    volumes:
+      - ./docker/make-certs.sh:/docker/make-certs.sh:ro
+      - certs:/certs
+
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      certs:
+        condition: service_completed_successfully
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: ${MSSQL_PID:-Express}
+      MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD:?set SQL_SA_PASSWORD in selfhost.env}
+    volumes:
+      - sql-data:/var/opt/mssql
+      - ./docker/mssql.conf:/var/opt/mssql/mssql.conf:ro
+      - certs:/certs:ro
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  init:
+    build:
+      context: .
+      target: tools
+    depends_on:
+      sql:
+        condition: service_healthy
+    environment:
+      SQL_SERVER: sql
+      SQL_DATABASE: ${SQL_DATABASE:-lms}
+      SQL_USER: sa
+      SQL_PASSWORD: ${SQL_SA_PASSWORD}
+      EXPECT_DB_USER: dbo
+      NODE_EXTRA_CA_CERTS: /certs/ca.pem
+      LMS_APP_SQL_USER: ${LMS_APP_SQL_USER:-lms_app}
+      LMS_APP_SQL_PASSWORD: ${LMS_APP_SQL_PASSWORD:?set LMS_APP_SQL_PASSWORD in selfhost.env}
+      LMS_BOOTSTRAP_SLUG: ${LMS_BOOTSTRAP_SLUG:-}
+      LMS_BOOTSTRAP_NAME: ${LMS_BOOTSTRAP_NAME:-}
+      LMS_BOOTSTRAP_AAD_TENANT_ID: ${LMS_BOOTSTRAP_AAD_TENANT_ID:-}
+      LMS_BOOTSTRAP_DOMAIN: ${LMS_BOOTSTRAP_DOMAIN:-}
+      LMS_BOOTSTRAP_ADMIN_EMAIL: ${LMS_BOOTSTRAP_ADMIN_EMAIL:-}
+      LMS_BOOTSTRAP_HOSTNAME: ${LMS_BOOTSTRAP_HOSTNAME:-}
+    volumes:
+      - certs:/certs:ro
+
+  app:
+    build:
+      context: .
+      target: runtime
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    env_file: .env
+    environment:
+      SQL_SERVER: sql
+      SQL_DATABASE: ${SQL_DATABASE:-lms}
+      SQL_AUTH: password
+      SQL_USER: ${LMS_APP_SQL_USER:-lms_app}
+      SQL_PASSWORD: ${LMS_APP_SQL_PASSWORD}
+      NODE_EXTRA_CA_CERTS: /certs/ca.pem
+    volumes:
+      - certs:/certs:ro
+    ports:
+      - "${LMS_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  certs:
+  sql-data:

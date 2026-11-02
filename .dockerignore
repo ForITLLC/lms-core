@@ -1,0 +1,16 @@
+.git
+.github
+node_modules
+.next
+apps
+video
+docs
+test
+coverage
+.env
+.env.*
+selfhost.env
+docker
+Dockerfile
+docker-compose.yml
+*.log
