@@ -163,6 +163,13 @@ export interface MultiTenantAuthConfig extends CommonConfig {
    */
   allowedTenantIds: false | string[];
   /**
+   * Tenants that can never complete login, whatever `allowedTenantIds` says
+   * (0.26.0). Refused on the validated `tid` before any Microsoft Graph
+   * call. Every entry must be a tenant GUID; anything else throws when the
+   * handlers are built. Default: none.
+   */
+  deniedTenantIds?: string[];
+  /**
    * Whether to accept B2B guest accounts. Default: `false` (reject). Set
    * `true` only for apps that intentionally invite cross-tenant guests.
    *

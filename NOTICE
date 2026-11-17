@@ -10,8 +10,8 @@ contributors' work.
 
 Vendored auth
 
-vendor/foritllc-auth contains auth 0.13.0 from ForITLLC/forit-Common, source commit
-8b89abd06736aceff4655a7ccc1b9441d1af45fc. Its SOURCE.json pins all 20 source modules
+vendor/foritllc-auth contains auth 0.29.3 from ForITLLC/forit-Common, source commit
+0f5a9c450a805c865e043a33f54c53af1ba9014e. Its SOURCE.json pins all 30 source modules
 and the supplied notice at d96a09d2358f15ebc453d16cf16ba1bc69e5f1e8. The only export
 rewrite in those modules changes an example address in a comment; executable
 source is unchanged.

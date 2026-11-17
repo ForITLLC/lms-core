@@ -1,22 +1,37 @@
 // ============================================================================
-// @foritllc/auth - Google sign-in adapter: configuration (0.13.0)
+// @foritllc/auth - Google sign-in adapter: configuration (0.13.0, 0.18.0)
 //
 // Every value that decides trust comes from server configuration checked when
 // the handlers are built, the way `loginPrompt` is (consumer contract §4): the
 // Auth origin, the workspace host and its workspaceId, this app's AppId, its
-// exact callback and audience, and this app's `fau_` key. None comes from a
-// request, a header, the browser or forit-Auth's answer.
+// exact callback and audience, and how this app proves itself to forit-Auth.
+// None comes from a request, a header, the browser or forit-Auth's answer.
 //
-// Off by default. Unless `enabled` is exactly `true` and a service key is set,
-// the adapter is dormant (shared-service-auth.md, consumer dormancy): it
-// calls nobody, the three mounted routes answer 503 GOOGLE_SIGNIN_UNCONFIGURED,
-// and `requireGoogleSession` answers 401 to an API request and a path-only
-// redirect to a page (see google.ts, createGoogleSignIn).
+// The proof is exactly one of two (Auth's app row names one, never both):
+// this app's `fau_` key (`serviceKey`), or from 0.18.0 a token from this app's
+// own managed identity (`caller: 'managed-identity'`, with Auth's caller
+// audience from AUTH_MI_AUDIENCE and, for a user-assigned identity, its client
+// id from AUTH_MI_CLIENT_ID). Identity mode builds its token source at startup
+// and fetches nothing until the first call to Auth.
+//
+// Off by default. Unless `enabled` is exactly `true` and a service key or
+// `caller: 'managed-identity'` is set, the adapter is dormant
+// (shared-service-auth.md, consumer dormancy): it calls nobody, its mounted
+// routes answer 503 GOOGLE_SIGNIN_UNCONFIGURED, and `requireGoogleSession`
+// answers 401 to an API request and a path-only redirect to a page (see
+// google.ts, createGoogleSignIn).
+//
+// Linked group access (0.24.0, C4): `linkedDirectory` is keyed by the link's
+// labelled target. `tenants` serves Entra-object links by tenant id; from
+// 0.24.0 `partitions` serves Directory-person links by partition id, each with
+// that partition's own scoped Directory key. One customer has one group master
+// (C5), so one id cannot be both a tenant and a partition.
 // ============================================================================
 
 import type { GooglePrincipal } from './principal.js';
 import { FORIT_TENANT_ID } from './identity.js';
 import { safeReturnTo } from './return-to.js';
+import { authCallerAudienceOf, createAuthCallerTokenSource, identityClientIdOf } from './client-assertion.js';
 
 /** The one origin forit-Auth serves redeem, verify and revoke from (PR99 §4). */
 export const AUTH_ORIGIN = 'https://auth.forit.io';
@@ -24,8 +39,8 @@ export const AUTH_ORIGIN = 'https://auth.forit.io';
 /** The one Google issuer forit-Auth accepts; the bare form is refused (PR99 §1). */
 export const GOOGLE_ISSUER = 'https://accounts.google.com';
 
-/** PR99 §2 AppId shape. */
-const APP_ID = /^[a-z0-9][a-z0-9-]{2,63}$/;
+/** PR99 §2 AppId shape. Exported so a closed adapter can still name its cookie (google.ts). */
+export const APP_ID = /^[a-z0-9][a-z0-9-]{2,63}$/;
 /** PR99 §4.1 workspace host shape: lower-case letters, digits, dots, hyphens; no port. */
 const HOST = /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -46,7 +61,7 @@ export const MIN_GOOGLE_SESSION_SECRET_LENGTH = 32;
 const DEFAULT_SESSION_MAX_AGE = 28800;
 const DEFAULT_RPC_TIMEOUT_MS = 5000;
 
-/** Thrown by `requireGoogleSignInConfigured()`; map it to 503 GOOGLE_SIGNIN_UNCONFIGURED. */
+/** Nothing throws it: a dormant adapter's routes answer 503 with its `code`, GOOGLE_SIGNIN_UNCONFIGURED. */
 export class GoogleSignInNotConfiguredError extends Error {
   readonly code = 'GOOGLE_SIGNIN_UNCONFIGURED';
   constructor() {
@@ -93,15 +108,79 @@ export interface LinkedDirectoryTenant {
 }
 
 /**
+ * 0.24.0. What for-Directory answers for one person in one partition, in ONE
+ * call so there is no gap between the status and the groups (C3; ADR 0022
+ * amendment 2026-11-07): `{ partitionId, personId, enabled, groups, asOf }`,
+ * the shape Directory accepted (Tasks 3CA5AD85, comment A07460F3). Directory
+ * answers 404 for an unknown, disabled or out-of-partition person, never
+ * `200 []`: the reader returns null (or throws) for that, and for any doubt.
+ */
+export interface DirectoryPersonAccess {
+  /** Must echo the requested partition id. */
+  partitionId: string;
+  /** Must echo the requested person id. */
+  personId: string;
+  /** Must be exactly `true`. */
+  enabled: boolean | null;
+  /**
+   * Directory's permanent group ids (GUIDs) of the Directory-mastered
+   * `App_<Product>` / `App_<Product>_<Role>` groups the person is in. Read
+   * only after `enabled === true` for this exact person; never a bare list.
+   */
+  groups: readonly string[];
+  /**
+   * When Directory read this answer (for-Directory sends it; 3CA5AD85 comment
+   * A07460F3). Accepted and ignored: it never grants or denies, is not
+   * checked, and is not passed on. Freshness comes from reading on every
+   * request (R-C1), never from this value.
+   */
+  asOf?: string;
+}
+
+/**
+ * 0.24.0. One for-Directory partition for a customer with no Entra members
+ * that this app serves on this host, with its own scoped reader.
+ * DENIED BY DEFAULT: leave it out until for-Directory ships the person-id
+ * status and group route (A1).
+ */
+export interface LinkedDirectoryPartition {
+  /**
+   * Directory's partition id (a GUID): the app's partition form. Held in lower
+   * case and compared exactly: a verify `target` whose `partitionId` is not
+   * one of these gets no groups and no Directory read. Auth binds the same
+   * partition on its relying-app row (A969B4BE, answer Q7); this is the app's
+   * own copy, from server configuration, never from the request.
+   */
+  partitionId: string;
+  /**
+   * Must be `true`: the reader uses this partition's own scoped Directory key,
+   * never a shared key that spans partitions or tenants.
+   */
+  partitionScoped: boolean;
+  /**
+   * C3: status and groups of exactly this person id in exactly this
+   * partition, in one call, by Directory's own ids only: never by email,
+   * Google id, alias or name. This read replaces the Entra guest check; it is
+   * not optional. Return null (or throw) on a 404 and on any doubt.
+   */
+  readPersonAccess: (target: { partitionId: string; personId: string }) => Promise<DirectoryPersonAccess | null>;
+}
+
+/**
  * Group access for a linked Google principal. Absent = denied: every gated
- * surface is hidden for every Google principal (consumer contract §3).
+ * surface is hidden for every Google principal (consumer contract §3). Needs
+ * at least one tenant or partition.
  */
 export interface LinkedDirectoryConfig {
-  tenants: readonly LinkedDirectoryTenant[];
+  /** Customer Entra tenants, for links whose target is an Entra object. */
+  tenants?: readonly LinkedDirectoryTenant[];
+  /** 0.24.0. Customer Directory partitions, for links whose target is a Directory person. */
+  partitions?: readonly LinkedDirectoryPartition[];
   /**
-   * The app's Entra guest policy, applied to the linked object with no
+   * The app's Entra guest policy, applied to a linked Entra object with no
    * exception for the link (§3 rule 5). Default `true`, and it should match
    * the app's own `rejectGuests`. Never turn it off just to make Google work.
+   * A Directory person has no guest type: its status read replaces this check.
    */
   rejectGuests?: boolean;
 }
@@ -128,9 +207,26 @@ export interface GoogleSignInConfig {
    * and bound as the app's ServiceKeyId (PR99 §4). Blank = dormant. Not a
    * Google credential: the app never holds one. A live adapter refuses at
    * startup an unresolved Key Vault reference and anything that is not `fau_`
-   * plus at least 43 base64url characters.
+   * plus at least 43 base64url characters. Never together with `caller`.
    */
   serviceKey?: string;
+  /**
+   * 0.18.0: prove this app to forit-Auth with a token from its own managed
+   * identity, in place of `serviceKey` (Auth's row names this identity). The
+   * only accepted value; never together with a key.
+   */
+  caller?: 'managed-identity';
+  /**
+   * Auth's caller app client id, a GUID, from `process.env.AUTH_MI_AUDIENCE`
+   * Required deployment configuration; there is no default.
+   * Required with `caller`. Not `audience`, which is this app's own origin.
+   */
+  authCallerAudience?: string;
+  /**
+   * Client id of this app's user-assigned identity, from
+   * `process.env.AUTH_MI_CLIENT_ID`. Unset for the system-assigned identity.
+   */
+  managedIdentityClientId?: string;
   /** Default and only accepted value: `https://auth.forit.io`. */
   authOrigin?: string;
   /** The app's RelyingApps.AppId. */
@@ -163,12 +259,21 @@ export interface GoogleSignInConfig {
   cookieDomain?: never;
 }
 
+/**
+ * How a live adapter proves itself to forit-Auth: its `fau_` key, or (0.18.0)
+ * a managed identity token for Auth's caller audience, from a source built at
+ * startup that fetches on first use.
+ */
+export type GoogleCallerProof =
+  | { kind: 'key'; serviceKey: string }
+  | { kind: 'identity'; audience: string; clientId: string | null; token: () => Promise<string> };
+
 /** A checked configuration. Dormant ones carry nothing else. */
 export type ResolvedGoogleConfig =
   | { live: false }
   | {
       live: true;
-      serviceKey: string;
+      proof: GoogleCallerProof;
       appId: string;
       workspaceHost: string;
       workspaceId: string;
@@ -185,9 +290,12 @@ export type ResolvedGoogleConfig =
       linked: ResolvedLinkedDirectory | null;
     };
 
+/** Keyed by the link's labelled target: the kind picks the map, the id picks the entry. */
 export interface ResolvedLinkedDirectory {
-  /** Keyed on the lower-case tenant id. */
+  /** `entra-object` links, keyed on the lower-case tenant id. */
   tenants: ReadonlyMap<string, LinkedDirectoryTenant>;
+  /** 0.24.0. `directory-person` links, keyed on the lower-case partition id. */
+  partitions: ReadonlyMap<string, LinkedDirectoryPartition>;
   rejectGuests: boolean;
 }
 
@@ -246,14 +354,21 @@ function checkInt(raw: unknown, name: string, min: number, max: number, fallback
 
 function checkLinked(raw: LinkedDirectoryConfig | undefined): ResolvedLinkedDirectory | null {
   if (raw === undefined) return null;
-  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.tenants) || raw.tenants.length === 0) {
-    refuse('linkedDirectory needs at least one tenant; leave it unset to deny every linked principal.');
+  if (!raw || typeof raw !== 'object') {
+    refuse('linkedDirectory needs at least one tenant or partition; leave it unset to deny every linked principal.');
+  }
+  if (raw.tenants !== undefined && !Array.isArray(raw.tenants)) refuse('linkedDirectory.tenants must be a list.');
+  if (raw.partitions !== undefined && !Array.isArray(raw.partitions)) refuse('linkedDirectory.partitions must be a list.');
+  const rawTenants = raw.tenants ?? [];
+  const rawPartitions = raw.partitions ?? [];
+  if (rawTenants.length === 0 && rawPartitions.length === 0) {
+    refuse('linkedDirectory needs at least one tenant or partition; leave it unset to deny every linked principal.');
   }
   if (raw.rejectGuests !== undefined && typeof raw.rejectGuests !== 'boolean') {
     refuse('linkedDirectory.rejectGuests must be a boolean.');
   }
   const tenants = new Map<string, LinkedDirectoryTenant>();
-  for (const tenant of raw.tenants) {
+  for (const tenant of rawTenants) {
     const id = typeof tenant?.tenantId === 'string' ? tenant.tenantId.toLowerCase() : '';
     if (!UUID.test(id)) refuse('linkedDirectory tenantId must be an Entra tenant id (a GUID).');
     if (id === FORIT_TENANT_ID) {
@@ -271,13 +386,38 @@ function checkLinked(raw: LinkedDirectoryConfig | undefined): ResolvedLinkedDire
     }
     tenants.set(id, tenant);
   }
-  return { tenants, rejectGuests: raw.rejectGuests ?? true };
+  const partitions = new Map<string, LinkedDirectoryPartition>();
+  for (const partition of rawPartitions) {
+    const id = typeof partition?.partitionId === 'string' ? partition.partitionId.toLowerCase() : '';
+    if (!UUID.test(id)) refuse('linkedDirectory partitionId must be a Directory partition id (a GUID).');
+    if (id === FORIT_TENANT_ID) {
+      refuse('linkedDirectory cannot serve the ForIT tenant: a Google principal is never ForIT staff.');
+    }
+    if (partitions.has(id)) refuse('linkedDirectory lists a partition twice.');
+    if (tenants.has(id)) {
+      refuse('linkedDirectory lists one id as both a tenant and a partition: a customer has one group master.');
+    }
+    if (partition.partitionScoped !== true) {
+      refuse("linkedDirectory partitions must use the partition's own scoped Directory key (partitionScoped: true).");
+    }
+    if (typeof partition.readPersonAccess !== 'function') {
+      refuse('linkedDirectory needs readPersonAccess (status and groups by person id) for every partition.');
+    }
+    partitions.set(id, partition);
+  }
+  return { tenants, partitions, rejectGuests: raw.rejectGuests ?? true };
+}
+
+/** Unset, null or only spaces. */
+function blank(value: unknown): boolean {
+  return value === undefined || value === null || (typeof value === 'string' && !value.trim());
 }
 
 /**
  * Check a configuration once, when the handlers are built. Throws on any value
- * that could make the adapter trust the wrong thing. Returns dormant for
- * `enabled !== true` (nothing else is read) and for a blank service key.
+ * that could make the adapter trust the wrong thing, and on both proofs or a
+ * half-set identity caller. Returns dormant for `enabled !== true` (nothing
+ * else is read) and for neither a service key nor `caller`.
  */
 export function resolveGoogleConfig(config: GoogleSignInConfig): ResolvedGoogleConfig {
   if (!config || config.enabled !== true) return { live: false };
@@ -320,10 +460,51 @@ export function resolveGoogleConfig(config: GoogleSignInConfig): ResolvedGoogleC
     linked: checkLinked(config.linkedDirectory),
   };
 
+  // The proof: exactly one of a key and a managed identity (Auth's row names one).
   const key = config.serviceKey;
-  if (key === undefined || key === null || (typeof key === 'string' && !key.trim())) {
-    return { live: false };
+  const hasKey = !blank(key);
+  const caller: unknown = config.caller;
+  const hasCaller = caller !== undefined && caller !== null;
+  const hasIdentitySetting = !blank(config.authCallerAudience) || !blank(config.managedIdentityClientId);
+  if (hasKey && (hasCaller || hasIdentitySetting)) {
+    refuse(
+      "both proofs: serviceKey and a managed identity caller (caller, authCallerAudience or managedIdentityClientId) " +
+        "are both set. forit-Auth's app row names exactly one; keep the one it names.",
+    );
   }
+  if (hasCaller && caller !== 'managed-identity') {
+    refuse("caller must be 'managed-identity', or unset to use serviceKey.");
+  }
+  if (!hasCaller && hasIdentitySetting) {
+    refuse("authCallerAudience and managedIdentityClientId are used only with caller: 'managed-identity'.");
+  }
+
+  if (hasCaller) {
+    // Identity mode: build the token source now, so a bad setting is refused
+    // at startup, and fetch nothing until the first call to Auth.
+    const callerAudience = authCallerAudienceOf(config.authCallerAudience);
+    if (callerAudience === null) {
+      refuse(
+        "authCallerAudience (AUTH_MI_AUDIENCE) must be forit-Auth's caller app client id: a GUID with no spaces, " +
+          'never an api:// name or Microsoft Graph.',
+      );
+    }
+    const clientId = identityClientIdOf(config.managedIdentityClientId);
+    if (clientId === undefined) {
+      refuse(
+        "managedIdentityClientId (AUTH_MI_CLIENT_ID) must be the client id (a GUID) of this app's user-assigned " +
+          'identity; leave it unset for the system-assigned identity.',
+      );
+    }
+    const token = createAuthCallerTokenSource({
+      audience: callerAudience,
+      ...(clientId ? { clientId } : {}),
+      timeoutMs: resolved.rpcTimeoutMs,
+    });
+    return { live: true, proof: { kind: 'identity', audience: callerAudience, clientId, token }, ...resolved };
+  }
+
+  if (!hasKey) return { live: false };
   if (typeof key !== 'string') refuse('serviceKey must be a string.');
   if (UNRESOLVED_REFERENCE.test(key)) {
     refuse(
@@ -335,7 +516,7 @@ export function resolveGoogleConfig(config: GoogleSignInConfig): ResolvedGoogleC
     refuse("serviceKey must be this app's fau_ key to forit-Auth: fau_ then at least 43 base64url characters.");
   }
 
-  return { live: true, serviceKey: key, ...resolved };
+  return { live: true, proof: { kind: 'key', serviceKey: key }, ...resolved };
 }
 
 /**

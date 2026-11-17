@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "seed:starter": "tsx scripts/seed-starter-courses.ts",
     "validate:courses": "tsx scripts/validate-courses.ts",
-    "test": "node --import tsx --test \"lib/**/*.test.ts\"",
+    "test": "node scripts/run-tests.mjs",
     "predev": "npm run build:auth",
     "prebuild": "npm run build:auth",
     "pretypecheck": "npm run build:auth",

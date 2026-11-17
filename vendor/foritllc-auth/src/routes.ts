@@ -173,6 +173,32 @@ function resolveAllowedTenantIds(config: AuthConfig): string[] | null {
   return config.allowedTenantIds ?? [resolveTenantId(config)];
 }
 
+const TENANT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/**
+ * The tenants the callback refuses, lower-cased. A deny list that does not
+ * say what it denies is a fault, never an empty list: anything but an array
+ * of tenant GUIDs throws when the handler is built, so a blank entry from an
+ * unset environment variable is seen at deploy and not at the first refusal
+ * that did not happen.
+ */
+function resolveDeniedTenantIds(config: AuthConfig): string[] {
+  const denied = config.deniedTenantIds;
+  if (denied === undefined) return [];
+  if (!Array.isArray(denied)) {
+    throw new TypeError('[forit/auth] deniedTenantIds must be an array of tenant ids');
+  }
+  return denied.map((entry) => {
+    const id = typeof entry === 'string' ? entry.toLowerCase() : '';
+    if (!TENANT_ID.test(id)) {
+      throw new TypeError(
+        `[forit/auth] deniedTenantIds holds ${JSON.stringify(entry)}, which is not a tenant id`,
+      );
+    }
+    return id;
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Login
 // ---------------------------------------------------------------------------
@@ -295,6 +321,7 @@ export function createCallbackHandler(
 ): (req: NextRequest) => Promise<Response> {
   assertSessionSecret();
   const credential = clientCredential(config);
+  const deniedTenants = resolveDeniedTenantIds(config);
   return async (request: NextRequest): Promise<Response> => {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
@@ -397,11 +424,37 @@ export function createCallbackHandler(
           loginHint = claims.login_hint;
         }
       } catch (err) {
+        const refused = err instanceof IdTokenError ? err : undefined;
         console.error('[forit/auth] Callback REJECTED: id_token invalid', {
-          reason: err instanceof IdTokenError ? err.reason : String(err),
-          upstreamStatus: err instanceof IdTokenError ? err.upstreamStatus : undefined,
+          reason: refused ? refused.reason : String(err),
+          upstreamStatus: refused?.upstreamStatus,
+          kid: refused?.kid,
+          knownKids: refused?.knownKids,
         });
         return fail('id_token_invalid');
+      }
+
+      // Tenant gates. They need the validated `tid` and nothing else, so they
+      // run BEFORE any Graph call (0.26.0, Agile 82AF574D): a person from a
+      // refused tenant never has their profile read by this runtime, and the
+      // log line carries the tenant id only. Both run before
+      // `authorizeSession` and `onSessionCreated`, so apps do not have to
+      // remember to write the check themselves.
+      //   - `deniedTenantIds`: refused whatever the allow-list says.
+      //   - `allowedTenantIds`: default = the configured login tenant id;
+      //     `false` opts out (cross-tenant apps).
+      const signedInTenant = tid.toLowerCase();
+      if (deniedTenants.includes(signedInTenant)) {
+        console.error('[forit/auth] Callback REJECTED: tenant denied', { tid });
+        return fail('tenant_not_allowed');
+      }
+      const allowedTenants = resolveAllowedTenantIds(config);
+      if (allowedTenants && !allowedTenants.some((t) => t.toLowerCase() === signedInTenant)) {
+        console.error('[forit/auth] Callback REJECTED: tenant not allowed', {
+          tid,
+          allowedTenants,
+        });
+        return fail('tenant_not_allowed');
       }
 
       // Get user info from Microsoft Graph. We $select explicitly so
@@ -433,20 +486,6 @@ export function createCallbackHandler(
         tid,
         tokens.access_token,
       );
-
-      // Tenant-id allow-list. Default = the configured login tenant id.
-      // Pass `allowedTenantIds: false` to opt out (cross-tenant apps).
-      // Runs BEFORE onSessionCreated so the safe behavior is automatic — apps
-      // do not have to remember to write the check themselves.
-      const allowedTenants = resolveAllowedTenantIds(config);
-      if (allowedTenants && !allowedTenants.some((t) => t.toLowerCase() === tid.toLowerCase())) {
-        console.error('[forit/auth] Callback REJECTED: tenant not allowed', {
-          email,
-          tid,
-          allowedTenants,
-        });
-        return fail('tenant_not_allowed');
-      }
 
       // Guest rejection. Default ON — closes 2026-05-06 CRM B2B-guest
       // incident vector. Two-signal detection because some tenants leave

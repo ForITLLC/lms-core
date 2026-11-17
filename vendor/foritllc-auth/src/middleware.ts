@@ -96,7 +96,7 @@ export function createAuthMiddleware(
   }
 
   return async (request: NextRequest): Promise<NextResponse> => {
-    const { pathname } = request.nextUrl;
+    const { pathname, search } = request.nextUrl;
     const access = routeAccess(config, pathname);
 
     if (access !== 'session' && access !== 'staff') {
@@ -117,7 +117,7 @@ export function createAuthMiddleware(
 
       // Page routes redirect to login
       const loginUrl = new URL('/', request.url);
-      loginUrl.searchParams.set('returnTo', pathname);
+      loginUrl.searchParams.set('returnTo', pathname + search);
       return NextResponse.redirect(loginUrl, { status: 303 });
     }
 
