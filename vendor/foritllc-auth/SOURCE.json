@@ -1,12 +1,20 @@
 {
   "schema": "lms.vendored-auth-source.v1",
   "repository": "ForITLLC/forit-Common",
-  "runtimeSourceCommit": "8b89abd06736aceff4655a7ccc1b9441d1af45fc",
+  "runtimeSourceCommit": "0f5a9c450a805c865e043a33f54c53af1ba9014e",
   "reviewedNoticeCommit": "d96a09d2358f15ebc453d16cf16ba1bc69e5f1e8",
-  "upstreamRuntimeTree": "f186072bddd7312dfbb006f580c6faa65c0586b9",
+  "upstreamRuntimeTree": "549bc67f1e0bc5bef0e42725ed0160bedc739ef8",
   "upstreamReviewedPackageTree": "7b84a88128640aa003bd3cf3a7fa58f1b12b27f7",
-  "version": "0.13.0",
+  "version": "0.29.3",
   "sourceFiles": [
+    {
+      "upstreamPath": "packages/auth/src/auth-caller-check.ts",
+      "path": "vendor/foritllc-auth/src/auth-caller-check.ts",
+      "gitBlob": "882e6c09e779b28f8fa892f49c0428e19e0eb46b",
+      "bytes": 5821,
+      "sha256": "19acb990da23b44c4ec6797963ff8fc79acf0e35a52f52ab6b7eefe3b031b834",
+      "exportedSha256": "19acb990da23b44c4ec6797963ff8fc79acf0e35a52f52ab6b7eefe3b031b834"
+    },
     {
       "upstreamPath": "packages/auth/src/browser.ts",
       "path": "vendor/foritllc-auth/src/browser.ts",
@@ -18,18 +26,26 @@
     {
       "upstreamPath": "packages/auth/src/client-assertion.ts",
       "path": "vendor/foritllc-auth/src/client-assertion.ts",
-      "gitBlob": "6a326231cf363304fdde9fde2035423fbde80ce1",
-      "bytes": 4578,
-      "sha256": "82832c65b391dad08ba49d81f4aa386689f25dafec41bb98db1a6962dcd18466",
-      "exportedSha256": "82832c65b391dad08ba49d81f4aa386689f25dafec41bb98db1a6962dcd18466"
+      "gitBlob": "3413fe20fccfeee3c8793ee45cfcababf6845961",
+      "bytes": 18275,
+      "sha256": "12d518baf306fe3305f990792fb8d1cf7443fd1b49f00a7fd7122b762b7e3369",
+      "exportedSha256": "cd800f3baf9c23379fcb7bc50b5516d4558d8bd6100873ed10f3219dbe344211"
+    },
+    {
+      "upstreamPath": "packages/auth/src/combined-middleware.ts",
+      "path": "vendor/foritllc-auth/src/combined-middleware.ts",
+      "gitBlob": "b07b943b5b9ebd25cf6a0e25d1387975d3223299",
+      "bytes": 7056,
+      "sha256": "0c262b1c11b55c8085edc99a8cf0dc08725365bd5dd2419f4bc852ad0172f744",
+      "exportedSha256": "0c262b1c11b55c8085edc99a8cf0dc08725365bd5dd2419f4bc852ad0172f744"
     },
     {
       "upstreamPath": "packages/auth/src/factories.ts",
       "path": "vendor/foritllc-auth/src/factories.ts",
-      "gitBlob": "dc28649ad778eab708605f301f12440b9909da37",
-      "bytes": 12936,
-      "sha256": "38927f762263721e4739b9b1934eafcb6fd2ed9c0fd54df94e02fbdfbf6afd59",
-      "exportedSha256": "38927f762263721e4739b9b1934eafcb6fd2ed9c0fd54df94e02fbdfbf6afd59"
+      "gitBlob": "005c1664fa4b0d132f9ea91239bec89da0de1e5d",
+      "bytes": 13244,
+      "sha256": "3d65aeee5684484f3251c155996b2258b1863cfc8097b7154a31b106d9d29f71",
+      "exportedSha256": "3d65aeee5684484f3251c155996b2258b1863cfc8097b7154a31b106d9d29f71"
     },
     {
       "upstreamPath": "packages/auth/src/get-session.ts",
@@ -42,42 +58,58 @@
     {
       "upstreamPath": "packages/auth/src/google-config.ts",
       "path": "vendor/foritllc-auth/src/google-config.ts",
-      "gitBlob": "4488e461b7565a80a1cbccd94c568f5381e34a27",
-      "bytes": 15781,
-      "sha256": "b8f3c3842b80f5f0bc73be75a87ca39d2d6a0773257c04888201c24bf5eade02",
-      "exportedSha256": "b8f3c3842b80f5f0bc73be75a87ca39d2d6a0773257c04888201c24bf5eade02"
+      "gitBlob": "e002d93687b398273444916b627435cd335130da",
+      "bytes": 24915,
+      "sha256": "17e12e5728a7fdb9f92c4954b37a2a94f6d0eedc9d429232a6394ba342673c01",
+      "exportedSha256": "58f7cb4035b9248db780944586d9cf40554ac639e08a75ca49f15307d6547f82"
     },
     {
       "upstreamPath": "packages/auth/src/google-exchange.ts",
       "path": "vendor/foritllc-auth/src/google-exchange.ts",
-      "gitBlob": "c4724b28d77e0a7c254cb35a9ce0d0c6606dbc66",
-      "bytes": 9703,
-      "sha256": "ea2efe9a6864f21ce030a04ceed135bbf7903f6bf8125950ef2af43f743a21d7",
-      "exportedSha256": "ea2efe9a6864f21ce030a04ceed135bbf7903f6bf8125950ef2af43f743a21d7"
+      "gitBlob": "5363bd77dddaa1eb1f7c1ba05f40655775001203",
+      "bytes": 13611,
+      "sha256": "ebeca30502f46588c7f62a7d97299ea658697589eeceb75af753486838347dd4",
+      "exportedSha256": "ebeca30502f46588c7f62a7d97299ea658697589eeceb75af753486838347dd4"
     },
     {
       "upstreamPath": "packages/auth/src/google-groups.ts",
       "path": "vendor/foritllc-auth/src/google-groups.ts",
-      "gitBlob": "7465e2dea4b26b37900132c8f87ed71874b16b3a",
-      "bytes": 5308,
-      "sha256": "1496b7fa4c47ca577b8da86cdf7d80329a9ede87776b97cd8a3b0a0479a617ab",
-      "exportedSha256": "1496b7fa4c47ca577b8da86cdf7d80329a9ede87776b97cd8a3b0a0479a617ab"
+      "gitBlob": "b33185f4f93668d31419061f79221476041c4ca6",
+      "bytes": 8633,
+      "sha256": "2e09b5af05f59ded7a6d3317e1069ece5a44e2898bec9065eecad973bc752baa",
+      "exportedSha256": "ac78caf38c7b977f70530dfc07adb738bf5393fc3ae98f5ab811059edcf2799b"
+    },
+    {
+      "upstreamPath": "packages/auth/src/google-principal-users.ts",
+      "path": "vendor/foritllc-auth/src/google-principal-users.ts",
+      "gitBlob": "cae6a1f754b53e74217db9f05e8b6af0fb48d08c",
+      "bytes": 17305,
+      "sha256": "591bf6a3ac0060cd3ebce9de5c58d1b695bc83b935c306ff1ea03fc9c8532824",
+      "exportedSha256": "591bf6a3ac0060cd3ebce9de5c58d1b695bc83b935c306ff1ea03fc9c8532824"
+    },
+    {
+      "upstreamPath": "packages/auth/src/google-signin-users.ts",
+      "path": "vendor/foritllc-auth/src/google-signin-users.ts",
+      "gitBlob": "97295f425cf72d662cc787dd85c0461ca8fe2c8a",
+      "bytes": 18110,
+      "sha256": "79884febb07c6552f352161e3028bb6a06ad9256c2dd4c010c0f936a6aa404d8",
+      "exportedSha256": "79884febb07c6552f352161e3028bb6a06ad9256c2dd4c010c0f936a6aa404d8"
     },
     {
       "upstreamPath": "packages/auth/src/google.ts",
       "path": "vendor/foritllc-auth/src/google.ts",
-      "gitBlob": "457fc49084a37512f879e4269cdf74489503d767",
-      "bytes": 23697,
-      "sha256": "54978deaad77c070ad4e16e7bcc7677c80973b0f2509c9f4b1d51a866b707dcf",
-      "exportedSha256": "54978deaad77c070ad4e16e7bcc7677c80973b0f2509c9f4b1d51a866b707dcf"
+      "gitBlob": "c82ee3c05a5c592846dc638fd769d6e503720aaa",
+      "bytes": 31673,
+      "sha256": "b3ae1881495f211887be03156b706ab1173d9ab83767799578fb82f372b7dc89",
+      "exportedSha256": "1e7cc170a0868574009d4b5516c54de4c12b1c17e260c4643f2937c76dba63f2"
     },
     {
       "upstreamPath": "packages/auth/src/id-token.ts",
       "path": "vendor/foritllc-auth/src/id-token.ts",
-      "gitBlob": "92670606baad4d9982ddcb04936d15a22371637e",
-      "bytes": 6230,
-      "sha256": "705b4a98ef884532356c6a073133a47492dbedfe90b8a2af3abaab020dd3e873",
-      "exportedSha256": "705b4a98ef884532356c6a073133a47492dbedfe90b8a2af3abaab020dd3e873"
+      "gitBlob": "ec3af15793925fc7e27862c7a5e429ff11c02fb9",
+      "bytes": 11685,
+      "sha256": "aa0ab5e7d016c30bd1861abffb3e32133ae9ecba1ca097aa2d597939974081f9",
+      "exportedSha256": "4b06635a36daecebe9ae645eccfda4a6f937a9accff5570f3c41ff8857d041af"
     },
     {
       "upstreamPath": "packages/auth/src/identity.ts",
@@ -90,18 +122,42 @@
     {
       "upstreamPath": "packages/auth/src/index.ts",
       "path": "vendor/foritllc-auth/src/index.ts",
-      "gitBlob": "761102423058fd7c9539f5280c44b665ca2d70db",
-      "bytes": 2666,
-      "sha256": "80e4637de9fdae61b92f185ef3e5a41d536580f8a46eeaa3530520f899f4e276",
-      "exportedSha256": "80e4637de9fdae61b92f185ef3e5a41d536580f8a46eeaa3530520f899f4e276"
+      "gitBlob": "7035081ee7ab07baf4932fac9664ada939c285a6",
+      "bytes": 4147,
+      "sha256": "e030f3a689749a7f232c2fd85c5960b4b47240c6ba30381f49d0b5de1c78e573",
+      "exportedSha256": "e030f3a689749a7f232c2fd85c5960b4b47240c6ba30381f49d0b5de1c78e573"
+    },
+    {
+      "upstreamPath": "packages/auth/src/microsoft-config.ts",
+      "path": "vendor/foritllc-auth/src/microsoft-config.ts",
+      "gitBlob": "b594926edf08b96491388977099cd69ccb4fb3e6",
+      "bytes": 25311,
+      "sha256": "51c0cf3ef76c9683d8c1b4de581d3ebe71c263e4a04cbdc9f334a321a7dd5f07",
+      "exportedSha256": "51c0cf3ef76c9683d8c1b4de581d3ebe71c263e4a04cbdc9f334a321a7dd5f07"
+    },
+    {
+      "upstreamPath": "packages/auth/src/microsoft-exchange.ts",
+      "path": "vendor/foritllc-auth/src/microsoft-exchange.ts",
+      "gitBlob": "8c841a3b0b019c53b8408eaf0960c6110f44bb2c",
+      "bytes": 15661,
+      "sha256": "fb5a82252ee38747d4dc1bda75672868aa9e5da0a9ae6059fed88a5174da1650",
+      "exportedSha256": "fb5a82252ee38747d4dc1bda75672868aa9e5da0a9ae6059fed88a5174da1650"
+    },
+    {
+      "upstreamPath": "packages/auth/src/microsoft.ts",
+      "path": "vendor/foritllc-auth/src/microsoft.ts",
+      "gitBlob": "202eb43b2a9fe9b7087552f4fd72c1be507b3b45",
+      "bytes": 35434,
+      "sha256": "5d98328c2cece649998402f9e778070e972909d045faf1ffef97ce02f5efbce5",
+      "exportedSha256": "5d98328c2cece649998402f9e778070e972909d045faf1ffef97ce02f5efbce5"
     },
     {
       "upstreamPath": "packages/auth/src/middleware.ts",
       "path": "vendor/foritllc-auth/src/middleware.ts",
-      "gitBlob": "346370ceb7e0bd99282e76362cdcc722d8c4faa7",
-      "bytes": 6459,
-      "sha256": "a6ab825a4d05bb174dbeeb1a030e068b17c086e3a40ce54bc0689fe4311ed515",
-      "exportedSha256": "a6ab825a4d05bb174dbeeb1a030e068b17c086e3a40ce54bc0689fe4311ed515"
+      "gitBlob": "8b107346c39f9f85641dd85e08987b19a4e28ae8",
+      "bytes": 6476,
+      "sha256": "1d28b1d05a36f7fc2ef97fc3b139e5969918fb34c290ad73b377113ad2950414",
+      "exportedSha256": "1d28b1d05a36f7fc2ef97fc3b139e5969918fb34c290ad73b377113ad2950414"
     },
     {
       "upstreamPath": "packages/auth/src/oauth-transaction.ts",
@@ -114,10 +170,10 @@
     {
       "upstreamPath": "packages/auth/src/principal.ts",
       "path": "vendor/foritllc-auth/src/principal.ts",
-      "gitBlob": "d3252173a77df7a578d42bf6b24400df81570b23",
-      "bytes": 4179,
-      "sha256": "d17a8f4bab54818631eb808709aea46533fe13765aff07133d7bc996ca44e1a5",
-      "exportedSha256": "d17a8f4bab54818631eb808709aea46533fe13765aff07133d7bc996ca44e1a5"
+      "gitBlob": "7297fbd5f79a0f213d59a0074a77ca3ab85c3312",
+      "bytes": 12470,
+      "sha256": "0695a691858e4d2d779962f58d741718cabc723e4ee763a9737095f589db58f2",
+      "exportedSha256": "56c423701ccd8037d6e3e0e03a479376e7df51fb10953dbaa3f03aed1d0f7381"
     },
     {
       "upstreamPath": "packages/auth/src/return-to.ts",
@@ -130,10 +186,18 @@
     {
       "upstreamPath": "packages/auth/src/routes.ts",
       "path": "vendor/foritllc-auth/src/routes.ts",
-      "gitBlob": "ef45bdb55bff5b39eeca0e6e10dda928278e6e20",
-      "bytes": 28287,
-      "sha256": "9731c9ab48abd4f9548caa2e08d8d33215f8997c1a0ec79f61fb8c380553d36d",
-      "exportedSha256": "a9521690649306c1baad7c2e76ae6c4f11e44fac36998f48fed19d71df434ccb"
+      "gitBlob": "31f1ba89c46cf1f7316549966f084cbbed3fdc0b",
+      "bytes": 29958,
+      "sha256": "673a670e495f686bb458bb3cc5657bfd9925eea181d7d706926f4c8ebf75a8c1",
+      "exportedSha256": "0711b1cb45250329e0b65dcc6e9ee0c2e9b2ab57cafb80ef771304058a9e90e5"
+    },
+    {
+      "upstreamPath": "packages/auth/src/session-client.ts",
+      "path": "vendor/foritllc-auth/src/session-client.ts",
+      "gitBlob": "968245e14319bcf4736b636512f1fb4ac08f7d71",
+      "bytes": 8211,
+      "sha256": "f06854d76943e879f82a131483c20011b70af5e1eef1b707a5c63dca3759cff9",
+      "exportedSha256": "f06854d76943e879f82a131483c20011b70af5e1eef1b707a5c63dca3759cff9"
     },
     {
       "upstreamPath": "packages/auth/src/session-crypto.ts",
@@ -162,10 +226,26 @@
     {
       "upstreamPath": "packages/auth/src/types.ts",
       "path": "vendor/foritllc-auth/src/types.ts",
-      "gitBlob": "d3cc8d19764b2668e1c1e3e190b40fa91ba552bb",
-      "bytes": 10567,
-      "sha256": "2a9cd2d37975914c75cf1e7c7e12dcb7525399f398c6ac47894229a2512a2e54",
-      "exportedSha256": "2a9cd2d37975914c75cf1e7c7e12dcb7525399f398c6ac47894229a2512a2e54"
+      "gitBlob": "a75493a270a0b9dc4274d3dfa0181013f3ed451e",
+      "bytes": 11375,
+      "sha256": "9df746655b8c79c935efe1fc93d48f02e2fc99debe0688bf8898a73a22ca98f7",
+      "exportedSha256": "9df746655b8c79c935efe1fc93d48f02e2fc99debe0688bf8898a73a22ca98f7"
+    },
+    {
+      "upstreamPath": "packages/auth/src/workload-token.ts",
+      "path": "vendor/foritllc-auth/src/workload-token.ts",
+      "gitBlob": "9d6cc3f4b87fa33c8d76f94026a47ab3b4bebed6",
+      "bytes": 14080,
+      "sha256": "1894513095afe9afbab46025b3e3275e257b160b108c033c675b81cf4c94151a",
+      "exportedSha256": "1894513095afe9afbab46025b3e3275e257b160b108c033c675b81cf4c94151a"
+    },
+    {
+      "upstreamPath": "packages/auth/src/workload.ts",
+      "path": "vendor/foritllc-auth/src/workload.ts",
+      "gitBlob": "185098f8ac2c1636e8dd39bb9b783c0e9c2017cb",
+      "bytes": 787,
+      "sha256": "be07c19d997492dfc9418834f60e9801c04f8ed1625cdb66e1a69550b9829f86",
+      "exportedSha256": "be07c19d997492dfc9418834f60e9801c04f8ed1625cdb66e1a69550b9829f86"
     }
   ],
   "notice": {
@@ -174,21 +254,36 @@
     "bytes": 1066,
     "sha256": "e0e1041d63eb57f42f2cfa0b03fd2890850d2148cbf9a1d64f86d0cd2b0500e4"
   },
-  "buildOutputs": [
-    "dist/*.js",
-    "dist/*.js.map",
-    "dist/*.d.ts",
-    "dist/*.d.ts.map"
-  ],
-  "rights": "Private packaging proposal; declared MIT metadata and proposed notice do not establish title, assignments or public release authority.",
-  "sourceHashMeaning": "sha256 pins unchanged reviewed input; exportedSha256 pins the deterministic identifier-safe export postimage.",
-  "exportRewrites": [
+  "localAdaptations": [
+    {
+      "path": "vendor/foritllc-auth/src/client-assertion.ts",
+      "kind": "comment-only public-export privacy/example wording; executable source unchanged"
+    },
+    {
+      "path": "vendor/foritllc-auth/src/google-config.ts",
+      "kind": "comment-only public-export privacy/example wording; executable source unchanged"
+    },
+    {
+      "path": "vendor/foritllc-auth/src/google-groups.ts",
+      "kind": "comment-only public-export privacy/example wording; executable source unchanged"
+    },
+    {
+      "path": "vendor/foritllc-auth/src/google.ts",
+      "kind": "comment-only public-export privacy/example wording; executable source unchanged"
+    },
+    {
+      "path": "vendor/foritllc-auth/src/id-token.ts",
+      "kind": "comment-only public-export privacy/example wording; executable source unchanged"
+    },
+    {
+      "path": "vendor/foritllc-auth/src/principal.ts",
+      "kind": "comment-only public-export privacy/example wording; executable source unchanged"
+    },
     {
       "path": "vendor/foritllc-auth/src/routes.ts",
-      "kind": "comment-only-example-address",
-      "inputSha256": "9731c9ab48abd4f9548caa2e08d8d33215f8997c1a0ec79f61fb8c380553d36d",
-      "exportedSha256": "a9521690649306c1baad7c2e76ae6c4f11e44fac36998f48fed19d71df434ccb",
-      "reason": "Preserve strict non-example address guard without changing executable sign-in behavior."
+      "kind": "comment-only public-export privacy/example wording; executable source unchanged"
     }
-  ]
+  ],
+  "packaging": "All 30 upstream Node runtime source modules; curated local/private source-first manifest, actual production dependency and Node exports. Root supplies compiler/framework. No registry publication or published Python payload.",
+  "rights": "The upstream package declares MIT; retain the existing supplied MIT notice unchanged. This records copied source and adaptations, not exclusive title or contributor assignments."
 }

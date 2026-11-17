@@ -54,9 +54,24 @@ export interface AuthConfig {
    * `'organizations'` AND the app intentionally accepts cross-tenant users).
    *
    * This runs BEFORE `onSessionCreated` so the safe behavior is automatic;
-   * apps don't have to remember to write the check themselves.
+   * apps don't have to remember to write the check themselves. Since 0.26.0
+   * it also runs before any Microsoft Graph call: a refused person's profile
+   * is never read, and the refusal logs the tenant id only.
    */
   allowedTenantIds?: string[] | false;
+  /**
+   * Tenant ids that can never complete login (0.26.0). The callback refuses
+   * a listed `tid` with `tenant_not_allowed` right after the id_token is
+   * validated, before any Microsoft Graph call, whatever `allowedTenantIds`
+   * says. For an app that takes any work tenant (`allowedTenantIds: false`)
+   * but must not serve one named customer from this runtime, such as a
+   * customer whose data lives in another pod.
+   *
+   * Every entry must be a tenant GUID (any case). Anything else, including a
+   * blank entry from an unset environment variable, throws when the handler
+   * is built. Default: none.
+   */
+  deniedTenantIds?: string[];
   /**
    * Reject B2B guest accounts at the callback. Default: `true`.
    *
