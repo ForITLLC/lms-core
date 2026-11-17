@@ -26,6 +26,8 @@ prebuild, pretypecheck and pretest hooks compile `src` into `dist` before the ap
 imports the package. Installation continues to use `file:vendor/foritllc-auth`
 and public dependencies; no private registry token is required.
 
-The 0.29.3 refresh needs a fresh anonymous-install, typecheck, test, production-build
-and isolated-version-startup readback. Source provenance alone does not establish
-real sign-in, cookie, database or provider acceptance.
+The 0.29.3 refresh passed a clean anonymous install, auth compilation, typecheck,
+all 749 unit tests, course validation and production build on 2026-11-17 using
+Node.js 20.20.2 and npm 10.8.2. Standalone startup with a synthetic session secret
+returned HTTP 200 and the checked revision from `/api/version`. Those checks do
+not establish real sign-in, cookie, database or provider acceptance.

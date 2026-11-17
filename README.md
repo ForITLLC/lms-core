@@ -98,11 +98,12 @@ publisher.
 
 ## Validation scope
 
-The source installation route has been checked with a credential-free clean
-install, auth compilation, the Next.js 15.5.18 production build and typecheck,
-and isolated standalone startup on Node.js 20.20.2 with npm 10.8.2. The startup
-check used a synthetic session secret and requested `/api/version`; it did not
-sign anyone in or connect to a real database or provider.
+The Auth 0.29.3 source refresh was checked on 2026-11-17 with a credential-free
+clean install on Node.js 20.20.2 and npm 10.8.2: auth compilation, typecheck,
+all 749 unit tests, course validation and the Next.js 15.5.18 production build
+passed. Isolated standalone startup returned HTTP 200 from `/api/version` with
+the checked source revision. The startup check used a synthetic session secret;
+it did not sign anyone in or connect to a real database or provider.
 
 Real sign-in, database migrations, tenant workflows, mail and AI integrations
 need their documented configuration and separate acceptance. The complete
