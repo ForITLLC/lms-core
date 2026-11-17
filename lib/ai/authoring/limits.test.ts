@@ -70,10 +70,10 @@ test("the caps are two jobs at once and twenty a month, per tenant, and the mess
   assert.equal(limits.AI_AUTHORING_OFF, "AI course drafting isn't turned on for this organisation.");
 });
 
-test("the switch ships empty: no env file, deploy or README turns it on", () => {
+test("the public settings leave AI authoring off until explicitly configured", () => {
   const read = (path: string) => readFileSync(new URL(`../../../${path}`, import.meta.url), "utf8");
   assert.match(read(".env.example"), /^AI_AUTHORING_TENANTS=$/m);
-  for (const path of [".github/workflows/deploy.yml", "README.public.md", ".env.example"]) {
+  for (const path of ["docker-compose.yml", "README.md", ".env.example"]) {
     assert.doesNotMatch(read(path), /AI_AUTHORING_TENANTS=\S/, path);
   }
 });
